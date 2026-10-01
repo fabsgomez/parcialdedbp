@@ -6,24 +6,23 @@ import com.example.demo.campusevent.domain.EventStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.ZonedDateTime;
-import java.util.Optional;
 
 public interface CampusEventRepository extends JpaRepository<CampusEvent, Long> {
 
-    Optional<CampusEvent> findByIdAndOrganizerId(Long id, Long organizerId);
-
-    Page<CampusEvent> findByStatusAndEventDateAfter(
-            EventStatus status,
-            ZonedDateTime from,
-            Pageable pageable
-    );
-
-    Page<CampusEvent> findByStatusAndCategoryAndEventDateAfter(
-            EventStatus status,
-            EventCategory category,
-            ZonedDateTime from,
+    @Query("""
+            SELECT e FROM CampusEvent e
+            WHERE e.status = :status
+              AND e.eventDate > :from
+              AND (:category IS NULL OR e.category = :category)
+            """)
+    Page<CampusEvent> searchPublished(
+            @Param("status") EventStatus status,
+            @Param("from") ZonedDateTime from,
+            @Param("category") EventCategory category,
             Pageable pageable
     );
 }
